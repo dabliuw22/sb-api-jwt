@@ -16,6 +16,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.leysoft.filter.JwtAuthenticationFilter;
 import com.leysoft.filter.JwtAuthorizationFilter;
 import com.leysoft.service.imple.SimpleUserDetailService;
+import com.leysoft.service.inter.JwtService;
 
 @Configuration
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
@@ -35,14 +36,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value(
             value = "${security.matchers.admin}")
     private String[] adminMatchers;
-
-    @Value(
-            value = "${jwt.sing.key}")
-    private String key;
-
-    @Value(
-            value = "${jwt.time-to-live}")
-    private long timeToLive;
+    
+    @Autowired
+    private JwtService jwtService;
 
     @Autowired
     private SimpleUserDetailService userDetailService;
@@ -59,8 +55,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .access("hasRole('ROLE_USER')").antMatchers(adminMatchers)
                 .access("hasRole('ROLE_ADMIN')").anyRequest().authenticated().and()
                 .addFilter(
-                        new JwtAuthenticationFilter(this.authenticationManager(), key, timeToLive))
-                .addFilter(new JwtAuthorizationFilter(this.authenticationManager(), key)).csrf()
+                        new JwtAuthenticationFilter(this.authenticationManager(), jwtService))
+                .addFilter(new JwtAuthorizationFilter(this.authenticationManager(), jwtService)).csrf()
                 .disable().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }

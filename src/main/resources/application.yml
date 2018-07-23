@@ -14,4 +14,4 @@ security:
 jwt:
   sing:
     key: my-key
-  time-to-live: 30000
+  time-to-live: 120000

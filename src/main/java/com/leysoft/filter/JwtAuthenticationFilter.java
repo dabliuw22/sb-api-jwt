@@ -2,11 +2,8 @@
 package com.leysoft.filter;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -15,45 +12,40 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.leysoft.dto.LoginRequest;
+import com.leysoft.service.inter.JwtService;
 import com.leysoft.util.Constants;
-
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.leysoft.util.Util;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private AuthenticationManager authenticationManager;
+    
+    private JwtService jwtService;
 
-    private String key;
-
-    private long timeToLive;
-
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, String key,
-            long timeToLive) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
-        this.key = key;
+        this.jwtService = jwtService;
         this.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login", "POST"));
     }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,
             HttpServletResponse response) throws AuthenticationException {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
+        String username = request.getParameter(Constants.Name.USERNAME_NAME);
+        String password = request.getParameter(Constants.Name.PASW_NAME);
         LoginRequest loginRequest = null;
         if (username == null || password == null) {
             try {
@@ -74,26 +66,18 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request,
             HttpServletResponse response, FilterChain chain, Authentication authResult)
             throws IOException, ServletException {
-
         User user = (User) authResult.getPrincipal();
-        LOGGER.info("username -> {}", user.getUsername());
-        List<String> roles = user.getAuthorities().stream().map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
-        Claims claims = Jwts.claims();
-        claims.put("roles", new ObjectMapper().writeValueAsString(roles));
-
-        String jwt = Jwts.builder().setClaims(claims).setSubject(user.getUsername())
-                .signWith(SignatureAlgorithm.HS512, this.key.getBytes()).setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + this.timeToLive)).compact();
+        String jwt = jwtService.sing(authResult);
 
         Map<String, Object> body = new HashMap<>();
-        body.put("token", jwt);
-        body.put("roles", roles);
+        body.put(Constants.Name.MESSAGE_NAME, Constants.Message.SUCCESSFUL_AUTHENTICATION);
+        body.put(Constants.Name.TOKEN_NAME, jwt);
+        body.put(Constants.Name.ROLES_NAME, Util.authoritiesToString(user.getAuthorities()));
 
         response.addHeader(Constants.HEADER_NAME, Constants.PREFIX_BEARER + jwt);
-        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
-        response.setStatus(200);
-        response.setContentType("application/json");
+        response.getWriter().write(jwtService.getBodyAuthentication(body));
+        response.setStatus(HttpStatus.OK.value());
+        response.setContentType(Constants.APPLICATION_JSON);
     }
 
     @Override
@@ -101,10 +85,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             HttpServletResponse response, AuthenticationException failed)
             throws IOException, ServletException {
         Map<String, Object> body = new HashMap<>();
-        body.put("message", "Error de autenticación, credenciales incorrectas");
-        body.put("error", failed.getMessage());
-        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
-        response.setStatus(401);
-        response.setContentType("application/json");
+        body.put(Constants.Name.MESSAGE_NAME, Constants.Message.UNSUCCESSFUL_AUTHENTICATION);
+        body.put(Constants.Name.ERROR_NAME, failed.getMessage());
+        
+        response.getWriter().write(jwtService.getBodyAuthentication(body));
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(Constants.APPLICATION_JSON);
     }
 }
