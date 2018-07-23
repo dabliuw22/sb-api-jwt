@@ -1,0 +1,17 @@
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: debug
+
+security:
+  matchers:
+    anonymous: /login, /user/add
+    public: /
+    user: /user/**
+    admin: /admin/**
+    
+jwt:
+  sing:
+    key: my-key
+  time-to-live: 30000
