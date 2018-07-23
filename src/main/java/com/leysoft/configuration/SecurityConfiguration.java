@@ -36,7 +36,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value(
             value = "${security.matchers.admin}")
     private String[] adminMatchers;
-    
+
     @Autowired
     private JwtService jwtService;
 
@@ -54,10 +54,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(anonymousMatchers).anonymous().antMatchers(userMatchers)
                 .access("hasRole('ROLE_USER')").antMatchers(adminMatchers)
                 .access("hasRole('ROLE_ADMIN')").anyRequest().authenticated().and()
-                .addFilter(
-                        new JwtAuthenticationFilter(this.authenticationManager(), jwtService))
-                .addFilter(new JwtAuthorizationFilter(this.authenticationManager(), jwtService)).csrf()
-                .disable().sessionManagement()
+                .addFilter(new JwtAuthenticationFilter(this.authenticationManager(), jwtService))
+                .addFilter(new JwtAuthorizationFilter(this.authenticationManager(), jwtService))
+                .csrf().disable().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 

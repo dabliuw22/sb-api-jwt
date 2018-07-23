@@ -32,10 +32,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private AuthenticationManager authenticationManager;
-    
+
     private JwtService jwtService;
 
-    public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtService jwtService) {
+    public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
+            JwtService jwtService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login", "POST"));
@@ -87,7 +88,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         Map<String, Object> body = new HashMap<>();
         body.put(Constants.Name.MESSAGE_NAME, Constants.Message.UNSUCCESSFUL_AUTHENTICATION);
         body.put(Constants.Name.ERROR_NAME, failed.getMessage());
-        
+
         response.getWriter().write(jwtService.getBodyAuthentication(body));
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(Constants.APPLICATION_JSON);

@@ -26,10 +26,11 @@ import io.jsonwebtoken.JwtException;
 public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthorizationFilter.class);
-    
+
     private JwtService jwtService;
 
-    public JwtAuthorizationFilter(AuthenticationManager authenticationManager, JwtService jwtService) {
+    public JwtAuthorizationFilter(AuthenticationManager authenticationManager,
+            JwtService jwtService) {
         super(authenticationManager);
         this.jwtService = jwtService;
     }
@@ -48,7 +49,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             body = jwtService.getClaims(header);
             validToken = true;
         } catch (JwtException | IllegalArgumentException e) {
-        	LOGGER.error("Error -> {}", e.getMessage());
+            LOGGER.error("Error -> {}", e.getMessage());
             validToken = false;
         }
         UsernamePasswordAuthenticationToken authentication = null;
@@ -62,7 +63,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
     }
 
     protected boolean requireAuthentication(String header) {
-    	boolean required = false;
+        boolean required = false;
         if (header != null && header.startsWith(Constants.PREFIX_BEARER)) {
             required = true;
         }

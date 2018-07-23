@@ -1,3 +1,4 @@
+
 package com.leysoft.service.inter;
 
 import java.util.List;
@@ -12,12 +13,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 
 public interface JwtService {
-	
-	public String sing(Authentication authResult) throws JsonProcessingException;
-	
-	public String getBodyAuthentication(Map<String, Object> params) throws JsonProcessingException;
-	
-	public Claims getClaims(String header) throws JwtException, IllegalArgumentException;
-	
-	public List<GrantedAuthority> getGrantedAuthorities(Claims claims);
+
+    public String sing(Authentication authResult) throws JsonProcessingException;
+
+    public String getBodyAuthentication(Map<String, Object> params) throws JsonProcessingException;
+
+    public Claims getClaims(String header) throws JwtException, IllegalArgumentException;
+
+    public List<GrantedAuthority> getGrantedAuthorities(Claims claims);
 }

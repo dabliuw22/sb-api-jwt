@@ -1,3 +1,4 @@
+
 package com.leysoft.service.imple;
 
 import java.util.Date;
@@ -26,47 +27,47 @@ import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
 public class JwtServiceImp implements JwtService {
-	
-	@Value(
+
+    @Value(
             value = "${jwt.sing.key}")
     private String singKey;
 
     @Value(
             value = "${jwt.time-to-live}")
     private long timeToLive;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
-    
+
     @Autowired
     private SimpleUserService simpleUserService;
 
-	@Override
-	public String sing(Authentication authResult) throws JsonProcessingException {
-		User user = (User) authResult.getPrincipal();
+    @Override
+    public String sing(Authentication authResult) throws JsonProcessingException {
+        User user = (User) authResult.getPrincipal();
         List<String> roles = user.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         Claims claims = Jwts.claims();
         claims.put("roles", objectMapper.writeValueAsString(roles));
-		return Jwts.builder().setClaims(claims).setSubject(user.getUsername())
+        return Jwts.builder().setClaims(claims).setSubject(user.getUsername())
                 .signWith(SignatureAlgorithm.HS512, this.singKey.getBytes()).setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + this.timeToLive)).compact();
-	}
+    }
 
-	@Override
-	public String getBodyAuthentication(Map<String, Object> params) throws JsonProcessingException {
-		return objectMapper.writeValueAsString(params);
-	}
-	
-	@Override
-	public Claims getClaims(String header) throws JwtException, IllegalArgumentException {
-		String jwt = header.replace(Constants.PREFIX_BEARER, "");
-		return Jwts.parser().setSigningKey(singKey.getBytes()).parseClaimsJws(jwt).getBody();
-	}
-	
-	@Override
-	public List<GrantedAuthority> getGrantedAuthorities(Claims claims) {
-		String username = claims.getSubject();
-		return Util.getGrantedAuthorities(simpleUserService.findByUsername(username));
-	}
+    @Override
+    public String getBodyAuthentication(Map<String, Object> params) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(params);
+    }
+
+    @Override
+    public Claims getClaims(String header) throws JwtException, IllegalArgumentException {
+        String jwt = header.replace(Constants.PREFIX_BEARER, "");
+        return Jwts.parser().setSigningKey(singKey.getBytes()).parseClaimsJws(jwt).getBody();
+    }
+
+    @Override
+    public List<GrantedAuthority> getGrantedAuthorities(Claims claims) {
+        String username = claims.getSubject();
+        return Util.getGrantedAuthorities(simpleUserService.findByUsername(username));
+    }
 }
