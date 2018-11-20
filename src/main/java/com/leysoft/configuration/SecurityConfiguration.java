@@ -11,15 +11,19 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.leysoft.filter.JwtAuthenticationFilter;
 import com.leysoft.filter.JwtAuthorizationFilter;
-import com.leysoft.service.imple.SimpleUserDetailService;
 import com.leysoft.service.inter.JwtService;
 
 @Configuration
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Value(
+            value = "${security.matchers.login}")
+    private String loginPath;
 
     @Value(
             value = "${security.matchers.anonymous}")
@@ -41,7 +45,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private JwtService jwtService;
 
     @Autowired
-    private SimpleUserDetailService userDetailService;
+    private UserDetailsService userDetailService;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -54,7 +58,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(anonymousMatchers).anonymous().antMatchers(userMatchers)
                 .access("hasRole('ROLE_USER')").antMatchers(adminMatchers)
                 .access("hasRole('ROLE_ADMIN')").anyRequest().authenticated().and()
-                .addFilter(new JwtAuthenticationFilter(this.authenticationManager(), jwtService))
+                .addFilter(new JwtAuthenticationFilter(this.authenticationManager(), jwtService,
+                        loginPath))
                 .addFilter(new JwtAuthorizationFilter(this.authenticationManager(), jwtService))
                 .csrf().disable().sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS);

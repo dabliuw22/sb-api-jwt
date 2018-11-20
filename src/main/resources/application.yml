@@ -10,6 +10,7 @@ security:
     public: /
     user: /user/**
     admin: /admin/**
+    login: /login
     
 jwt:
   sing:

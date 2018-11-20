@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -36,10 +37,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     private JwtService jwtService;
 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager,
-            JwtService jwtService) {
+            JwtService jwtService, String loginPath) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
-        this.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher("/login", "POST"));
+        this.setRequiresAuthenticationRequestMatcher(
+                new AntPathRequestMatcher(loginPath, HttpMethod.POST.name()));
     }
 
     @Override
